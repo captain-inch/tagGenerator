@@ -50,11 +50,14 @@ class App extends Component {
   };
   onSubmit = () => {
     let resp = null;
-    fetch("http://localhost:3000/imageurl", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: this.state.url }),
-    })
+    fetch(
+      "https://miro.medium.com/max/1000/1*2EarKsT1IfdPpigEjtjHcQ.png/imageurl",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: this.state.url }),
+      }
+    )
       .then((resp) => resp.json())
       .then(
         function (response) {
@@ -66,25 +69,31 @@ class App extends Component {
       )
       .then(() => {
         this.setState({ concepts: resp });
-        fetch("http://localhost:3000/submitresults", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(
-            this.state.concepts.reduce((acc, data) => {
-              acc.push(data.name);
-              return acc;
-            }, [])
-          ),
-        });
+        fetch(
+          "https://miro.medium.com/max/1000/1*2EarKsT1IfdPpigEjtjHcQ.png/submitresults",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(
+              this.state.concepts.reduce((acc, data) => {
+                acc.push(data.name);
+                return acc;
+              }, [])
+            ),
+          }
+        );
 
         if (this.state.concepts) {
-          fetch("http://localhost:3000/image", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              id: this.state.user.id,
-            }),
-          })
+          fetch(
+            "https://miro.medium.com/max/1000/1*2EarKsT1IfdPpigEjtjHcQ.png/image",
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                id: this.state.user.id,
+              }),
+            }
+          )
             .then((r) => r.json())
             .then((count) => {
               this.setState(Object.assign(this.state.user, { entries: count }));
@@ -130,13 +139,16 @@ class App extends Component {
     this.routeChange("home");
   };
   getTopData = () => {
-    fetch("http://localhost:3000/gettop", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        max: this.state.maxTopData,
-      }),
-    })
+    fetch(
+      "https://miro.medium.com/max/1000/1*2EarKsT1IfdPpigEjtjHcQ.png/gettop",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          max: this.state.maxTopData,
+        }),
+      }
+    )
       .then((r) => r.json())
       .then((data) => {
         this.setState({

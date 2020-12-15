@@ -41,14 +41,17 @@ export default class SignUp extends Component {
       console.warn("Passwords does not match !");
       return false;
     }
-    fetch("http://localhost:3000/checkuseravailability", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: this.state.email,
-        username: this.state.username,
-      }),
-    })
+    fetch(
+      "https://limitless-depths-84747.herokuapp.com/checkuseravailability",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: this.state.email,
+          username: this.state.username,
+        }),
+      }
+    )
       .then((resp) => resp.json())
       .then((availability) => {
         this.setState({
@@ -62,7 +65,7 @@ export default class SignUp extends Component {
           this.state.passwordStrongEnough &&
           this.state.isValidEmail
         ) {
-          fetch("http://localhost:3000/register", {
+          fetch("https://limitless-depths-84747.herokuapp.com/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
