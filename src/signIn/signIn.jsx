@@ -3,7 +3,7 @@ import React, { Component } from "react";
 export default class SignIn extends Component {
   constructor(props) {
     super(props);
-    this.state = { email: "", password: "" };
+    this.state = { email: "", password: "", validSignIn: true };
   }
   onEmailChange = (e) => {
     this.setState({ email: e.target.value });
@@ -21,8 +21,10 @@ export default class SignIn extends Component {
       }),
     }).then((resp) => {
       if (resp.status === 200) {
+        this.setState({ validSignIn: true });
         resp.json().then((resp) => this.props.onSignIn(resp));
       } else {
+        this.setState({ validSignIn: false });
         console.warn(resp.status);
       }
     });
@@ -36,7 +38,7 @@ export default class SignIn extends Component {
             <fieldset id="sign_up" className="ba b--transparent ph0 mh0">
               <legend className="f4 fw6 ph0 mh0">Sign In</legend>
               <div className="mt3">
-                <label className="db fw6 lh-copy f6">Username</label>
+                <label className="db fw6 lh-copy f6">Email</label>
                 <input
                   className="pa2 input-reset ba bg-transparent white-70 hover-bg-white-20 hover-white w-100"
                   type="text"
@@ -45,6 +47,11 @@ export default class SignIn extends Component {
                   onChange={this.onEmailChange}
                 />
               </div>
+              {!this.state.validSignIn ? (
+                <label className="db fw6 lh-copy dark-red f6">
+                  Invalid email or password
+                </label>
+              ) : null}
               <div className="mv3">
                 <label className="db fw6 lh-copy f6">Password</label>
                 <input
@@ -55,9 +62,9 @@ export default class SignIn extends Component {
                   onChange={this.onPasswordChange}
                 />
               </div>
-              <label className="pa0 ma0 lh-copy f6 pointer">
+              {/* <label className="pa0 ma0 lh-copy f6 pointer">
                 <input type="checkbox" /> Remember me
-              </label>
+              </label> */}
             </fieldset>
             <div className="">
               <input
@@ -75,13 +82,13 @@ export default class SignIn extends Component {
               >
                 Sign up
               </p>
-              <p
+              {/* <p
                 href="#0"
                 className="f6 link dim white db pointer"
                 onClick={() => this.routeChange("forgottenPassword")}
               >
                 Forgot your password?
-              </p>
+              </p> */}
             </div>
           </div>
         </main>

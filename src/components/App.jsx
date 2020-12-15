@@ -6,13 +6,10 @@ import Clarifai from "clarifai";
 import Rank from "./Rank.jsx";
 import SignIn from "../signIn/signIn.jsx";
 import SignUp from "./../signUp/signUp.jsx";
+import TopData from "./topData.jsx";
 import Particles from "react-particles-js";
 import ImageDisplay from "./imageDisplay.jsx";
 import "tachyons";
-import {
-  isConstructorDeclaration,
-  parseConfigFileTextToJson,
-} from "typescript";
 
 const particlesParams = {
   particles: {
@@ -26,16 +23,16 @@ const particlesParams = {
 };
 //,interactivity: {events: {onclick: {enable: true,mode: "repulse",  },}},
 
-const app = new Clarifai.App({ apiKey: "e0c918f4d9e144a0b85687eedd9a4375" });
-
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
       url: "",
       concepts: null,
-      route: "home",
+      route: "signIn",
       signedIn: false,
+      topData: null,
+      maxTopData: 5,
       user: {
         id: "",
         name: "",
@@ -53,8 +50,12 @@ class App extends Component {
   };
   onSubmit = () => {
     let resp = null;
-    app.models
-      .predict(Clarifai.GENERAL_MODEL, this.state.url)
+    fetch("http://localhost:3000/imageurl", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: this.state.url }),
+    })
+      .then((resp) => resp.json())
       .then(
         function (response) {
           resp = response.outputs[0].data.concepts;
@@ -65,7 +66,18 @@ class App extends Component {
       )
       .then(() => {
         this.setState({ concepts: resp });
-        if (resp) {
+        fetch("http://localhost:3000/submitresults", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            this.state.concepts.reduce((acc, data) => {
+              acc.push(data.name);
+              return acc;
+            }, [])
+          ),
+        });
+
+        if (this.state.concepts) {
           fetch("http://localhost:3000/image", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -74,20 +86,10 @@ class App extends Component {
             }),
           })
             .then((r) => r.json())
-            .then((count) =>
-              this.setState(Object.assign(this.state.user, { entries: count }))
-            );
-          // fetch("http://localhost:3000/image", {
-          //   method: "put",
-          //   headers: { "Content-Type": "application/json" },
-          //   body: JSON.stringify({
-          //     id: this.state.user.id,
-          //   }),
-          // })
-          //   .then((response) => {console.log(response);response.json();})
-          //   .then((count) => {
-          //     this.setState(Object.assign(this.state.user, { entries: count }));
-          //   });
+            .then((count) => {
+              this.setState(Object.assign(this.state.user, { entries: count }));
+              this.getTopData();
+            });
         }
       });
   };
@@ -125,8 +127,26 @@ class App extends Component {
     });
     console.log(userData);
 
-    this.routeChange("/");
+    this.routeChange("home");
   };
+  getTopData = () => {
+    fetch("http://localhost:3000/gettop", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        max: this.state.maxTopData,
+      }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        this.setState({
+          topData: data,
+        });
+      });
+  };
+  componentDidMount() {
+    this.getTopData();
+  }
   render() {
     return (
       <div className="App">
@@ -151,13 +171,25 @@ class App extends Component {
         {this.state.route === "signUp" ? (
           <SignUp onSignUp={this.onSignUp} routeChange={this.routeChange} />
         ) : null}
-        {this.state.signedIn ? (
+        {this.state.route === "home" ? (
           <div>
-            <ImageLinkForm
-              onInputChange={this.onInputChange}
-              onSubmit={this.onSubmit}
-            />
-            <ImageDisplay url={this.state.url} concepts={this.state.concepts} />
+            <TopData topData={this.state.topData} />
+            {this.state.signedIn ? (
+              <ImageLinkForm
+                onInputChange={this.onInputChange}
+                onSubmit={this.onSubmit}
+              />
+            ) : (
+              <p className="p tc f2 b mt5">
+                Sign in to generate your own tags !
+              </p>
+            )}
+            {this.state.signedIn ? (
+              <ImageDisplay
+                url={this.state.url}
+                concepts={this.state.concepts}
+              />
+            ) : null}
           </div>
         ) : null}
       </div>

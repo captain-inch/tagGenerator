@@ -1,4 +1,25 @@
 import React, { Component } from "react";
+const testPasswordLength = (pwd) => {
+  return /(?=.{8,})/.test(pwd);
+};
+
+const testPasswordCasing = (pwd) => {
+  return /(?=.*[a-z])(?=.*[A-Z])/.test(pwd);
+};
+const testPasswordNumber = (pwd) => {
+  return /(?=.*[0-9])/.test(pwd);
+};
+const testPasswordSpecial = (pwd) => {
+  return /(?=.*[!@#$%^&*])/.test(pwd);
+};
+const testPassword = (pwd) => {
+  return (
+    testPasswordLength(pwd) &&
+    testPasswordCasing(pwd) &&
+    testPasswordSpecial(pwd) &&
+    testPasswordNumber(pwd)
+  );
+};
 
 export default class SignUp extends Component {
   constructor(props) {
@@ -8,6 +29,9 @@ export default class SignUp extends Component {
       username: "",
       password: "",
       passwordCopy: "",
+      usernameAvailable: true,
+      emailAvailable: true,
+      passwordStrongEnough: false,
       isValidEmail: true,
       passwordMatch: true,
     };
@@ -17,21 +41,43 @@ export default class SignUp extends Component {
       console.warn("Passwords does not match !");
       return false;
     }
-    fetch("http://localhost:3000/register", {
+    fetch("http://localhost:3000/checkuseravailability", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email: this.state.email,
         username: this.state.username,
-        password: this.state.password,
       }),
     })
       .then((resp) => resp.json())
-      .then((resp) => {
-        if (resp === "Success") {
-          this.props.routeChange("/");
+      .then((availability) => {
+        this.setState({
+          usernameAvailable: availability.username,
+          emailAvailable: availability.email,
+        });
+        console.log("Username + email availability : ", availability);
+        if (
+          availability.email &&
+          availability.username &&
+          this.state.passwordStrongEnough &&
+          this.state.isValidEmail
+        ) {
+          fetch("http://localhost:3000/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: this.state.email,
+              username: this.state.username,
+              password: this.state.password,
+            }),
+          }).then((resp) => {
+            if (resp.status < 300) {
+              this.props.routeChange("signIn");
+            } else {
+              console.warn(resp);
+            }
+          });
         } else {
-          console.warn(resp);
         }
       });
   };
@@ -56,13 +102,16 @@ export default class SignUp extends Component {
       this.setState({ passwordMatch: false });
     }
     this.setState({ passwordCopy: e.target.value });
+    this.setState({
+      passwordStrongEnough: testPassword(this.state.password),
+    });
   };
   onUsernameChange = (e) => {
     this.setState({ username: e.target.value });
   };
   checkEmail = (e) => {
     function validateEmail(email) {
-      const re = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
+      const re = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&,'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
       return re.test(String(email).toLowerCase());
     }
     this.setState({
@@ -87,6 +136,11 @@ export default class SignUp extends Component {
                   onChange={this.onUsernameChange}
                   onBlur={this.checkUsername}
                 />
+                {!this.state.usernameAvailable ? (
+                  <label className="db fw6 lh-copy dark-red f6">
+                    This user already exists
+                  </label>
+                ) : null}
               </div>
               <div className="mt3">
                 <label className="db fw6 lh-copy f6">Email</label>
@@ -101,6 +155,11 @@ export default class SignUp extends Component {
                 {!this.state.isValidEmail ? (
                   <label className="db fw6 lh-copy dark-red f6">
                     Invalid email
+                  </label>
+                ) : null}
+                {!this.state.emailAvailable ? (
+                  <label className="db fw6 lh-copy dark-red f6">
+                    This email already exists
                   </label>
                 ) : null}
               </div>
@@ -123,9 +182,41 @@ export default class SignUp extends Component {
                   id="passwordCopy"
                   onChange={this.onPasswordCopyChange}
                 />
-                {!this.state.passwordMatch ? (
+                {this.state.passwordStrongEnough &&
+                !this.state.passwordMatch ? (
                   <label className="db fw6 lh-copy dark-red f6">
                     Password does not match
+                  </label>
+                ) : null}
+                {!this.state.passwordStrongEnough ? (
+                  <label className="db list tl fw6 lh-copy f6 pa0">
+                    <div className="f5 tc b ma2">
+                      Password must contain at least :<br />
+                    </div>
+                    <li>
+                      {testPasswordLength(this.state.password)
+                        ? "✅  "
+                        : "❌  "}
+                      8 characters
+                    </li>
+                    <li>
+                      {testPasswordSpecial(this.state.password)
+                        ? "✅  "
+                        : "❌  "}
+                      One special character
+                    </li>
+                    <li>
+                      {testPasswordNumber(this.state.password)
+                        ? "✅  "
+                        : "❌  "}
+                      One number
+                    </li>
+                    <li>
+                      {testPasswordCasing(this.state.password)
+                        ? "✅  "
+                        : "❌  "}
+                      One capital letter
+                    </li>
                   </label>
                 ) : null}
               </div>
