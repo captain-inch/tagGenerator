@@ -50,14 +50,11 @@ class App extends Component {
   };
   onSubmit = () => {
     let resp = null;
-    fetch(
-      "https://miro.medium.com/max/1000/1*2EarKsT1IfdPpigEjtjHcQ.png/imageurl",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: this.state.url }),
-      }
-    )
+    fetch("https://limitless-depths-84747.herokuapp.com/imageurl", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: this.state.url }),
+    })
       .then((resp) => resp.json())
       .then(
         function (response) {
@@ -69,38 +66,33 @@ class App extends Component {
       )
       .then(() => {
         this.setState({ concepts: resp });
-        fetch(
-          "https://miro.medium.com/max/1000/1*2EarKsT1IfdPpigEjtjHcQ.png/submitresults",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(
-              this.state.concepts.reduce((acc, data) => {
-                acc.push(data.name);
-                return acc;
-              }, [])
-            ),
-          }
-        );
+        fetch("https://limitless-depths-84747.herokuapp.com/submitresults", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            this.state.concepts.reduce((acc, data) => {
+              acc.push(data.name);
+              return acc;
+            }, [])
+          ),
+        });
 
         if (this.state.concepts) {
-          fetch(
-            "https://miro.medium.com/max/1000/1*2EarKsT1IfdPpigEjtjHcQ.png/image",
-            {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                id: this.state.user.id,
-              }),
-            }
-          )
+          fetch("https://limitless-depths-84747.herokuapp.com/image", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: this.state.user.id,
+            }),
+          })
             .then((r) => r.json())
             .then((count) => {
               this.setState(Object.assign(this.state.user, { entries: count }));
               this.getTopData();
             });
         }
-      });
+      })
+      .catch((err) => console.log("Error fetching results with API"));
   };
   routeChange = (newRoute) => {
     this.setState({ route: newRoute });
@@ -139,16 +131,13 @@ class App extends Component {
     this.routeChange("home");
   };
   getTopData = () => {
-    fetch(
-      "https://miro.medium.com/max/1000/1*2EarKsT1IfdPpigEjtjHcQ.png/gettop",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          max: this.state.maxTopData,
-        }),
-      }
-    )
+    fetch("https://limitless-depths-84747.herokuapp.com/gettop", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        max: this.state.maxTopData,
+      }),
+    })
       .then((r) => r.json())
       .then((data) => {
         this.setState({

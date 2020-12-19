@@ -6,7 +6,7 @@ export default class TopData extends Component {
   }
   render() {
     const ret = this.props.topData.reduce((acc, d) => {
-      acc.push(<li>{d}</li>);
+      acc.push(<li key={acc.length}>{d}</li>);
       return acc;
     }, []);
     return (
